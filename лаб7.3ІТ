@@ -1,0 +1,116 @@
+/*Lab7.3
+Перепелця Ілона
+Лабораторна рообота 7.3
+Ітераційний спосіб
+Варіант 11*/
+#include <iostream>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+#include <cassert>
+
+using namespace std;
+
+// Прототипи функцій
+int** Create(const int k, const int n, const int Low, const int High);
+void Print(int** a, const int k, const int n);
+void ToTriangular(int** a, const int k, const int n);
+int CountRowsWithMeanLess(int** a, const int k, const int n, const double threshold);
+void TestIter();
+
+int main() {
+    srand((unsigned)time(NULL));
+
+    // Запуск unit-тесту
+    TestIter();
+    cout << "Unit test passed successfully!\n\n";
+
+    int k = 4, n = 4;
+    int** a = Create(k, n, -5, 10);
+
+    cout << "Original Matrix (" << k << "x" << n << "):\n";
+    Print(a, k, n);
+
+    double threshold = 2.5;
+    int count = CountRowsWithMeanLess(a, k, n, threshold);
+    cout << "\nNumber of rows with average < " << threshold << ": " << count << "\n";
+
+    ToTriangular(a, k, n);
+    cout << "\nTriangular Matrix:\n";
+    Print(a, k, n);
+
+    for (int i = 0; i < k; i++) delete[] a[i];
+    delete[] a;
+
+    return 0;
+}
+
+// Заповнення матриці
+int** Create(const int k, const int n, const int Low, const int High) {
+    int** a = new int* [k];
+    for (int i = 0; i < k; i++) {
+        a[i] = new int[n];
+        for (int j = 0; j < n; j++)
+            a[i][j] = Low + rand() % (High - Low + 1);
+    }
+    return a;
+}
+
+// Форматоване виведення матриці
+void Print(int** a, const int k, const int n) {
+    for (int i = 0; i < k; i++, cout << endl)
+        for (int j = 0; j < n; j++)
+            cout << setw(6) << a[i][j];
+}
+
+// Завдання 1: Зведення до трикутного вигляду (прямий хід Гауса)
+void ToTriangular(int** a, const int k, const int n) {
+    int minDim = (k < n) ? k : n;
+    for (int i = 0; i < minDim; i++) {
+        if (a[i][i] == 0) {
+            for (int r = i + 1; r < k; r++) {
+                if (a[r][i] != 0) {
+                    for (int c = 0; c < n; c++) swap(a[i][c], a[r][c]);
+                    break;
+                }
+            }
+        }
+        if (a[i][i] == 0) continue;
+
+        for (int r = i + 1; r < k; r++) {
+            if (a[r][i] != 0) {
+                double factor = (double)a[r][i] / a[i][i];
+                for (int c = i; c < n; c++) {
+                    a[r][c] = static_cast<int>(round(a[r][c] - factor * a[i][c]));
+                }
+            }
+        }
+    }
+}
+
+// Завдання 2: Кількість рядків із середнім арифметичним менше threshold
+int CountRowsWithMeanLess(int** a, const int k, const int n, const double threshold) {
+    int count = 0;
+    for (int i = 0; i < k; i++) {
+        double sum = 0;
+        for (int j = 0; j < n; j++)
+            sum += a[i][j];
+        if ((sum / n) < threshold)
+            count++;
+    }
+    return count;
+}
+
+// Unit-тест
+void TestIter() {
+    int k = 2, n = 3;
+    int** t = new int* [k];
+    t[0] = new int[n] {1, 2, 3}; // середнє = 2.0
+    t[1] = new int[n] {4, 5, 6}; // середнє = 5.0
+
+    assert(CountRowsWithMeanLess(t, k, n, 3.0) == 1);
+
+    for (int i = 0; i < k; i++) delete[] t[i];
+    delete[] t;
+}
